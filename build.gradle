@@ -9,7 +9,7 @@ apply from: "${rootDir}/gradle/jacoco/jacoco.gradle"
 apply from: "${rootDir}/gradle/git-hooks/git-hooks.gradle"
 
 group = 'com.skeleton.framework'
-version = '1.0-SNAPSHOT'
+version = '1.0.0-SNAPSHOT'
 
 
 sourceCompatibility = "11"
