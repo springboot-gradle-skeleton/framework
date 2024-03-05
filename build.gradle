@@ -1,0 +1,111 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'maven-publish'
+apply plugin: 'jacoco'
+apply from: "${rootDir}/gradle/checkstyle/checkstyle.gradle"
+apply from: "${rootDir}/gradle/jacoco/jacoco.gradle"
+apply from: "${rootDir}/gradle/git-hooks/git-hooks.gradle"
+
+group = 'com.skeleton.framework'
+version = '1.0-SNAPSHOT'
+
+
+sourceCompatibility = "11"
+targetCompatibility = "11"
+
+repositories {
+    // 私有maven仓库
+//        maven {
+//            allowInsecureProtocol = true
+//            url "http://xxx"
+//        }
+    maven {url 'https://maven.aliyun.com/repository/gradle-plugin'}
+    maven {url 'https://maven.aliyun.com/repository/google'}
+    maven {url 'https://maven.aliyun.com/repository/public'}
+    maven {url 'https://maven.aliyun.com/repository/jcenter'}
+    mavenLocal()
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+javadoc {
+    options {
+        encoding 'UTF-8'
+        charSet 'UTF-8'
+        author true
+        version true
+        title "基础库"
+    }
+
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption("html5", true)
+    }
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        options.addStringOption("Xdoclint:none", "-quiet")
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId project.group
+            artifactId project.name
+            version project.version
+
+            from components.java
+
+            artifact javadocJar
+            artifact sourcesJar
+        }
+    }
+
+    repositories {
+        mavenLocal()
+        maven {
+            def releaseRepoUrl = ""
+            def snapshotRepoUrl = ""
+
+            url = version.endsWith("SNAPSHOT") ? snapshotRepoUrl : releaseRepoUrl
+
+            credentials {
+                username = getRepositoryUsername()
+                password = getRepositoryPassword()
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+def getRepositoryUsername() {
+    return hasProperty("NEXUS_USERNAME") ? NEXUS_USERNAME : ''
+}
+
+def getRepositoryPassword() {
+    return hasProperty("NEXUS_PASSWORD") ? NEXUS_PASSWORD : ''
+}

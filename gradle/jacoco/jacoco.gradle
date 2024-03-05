@@ -1,0 +1,58 @@
+apply plugin: 'jacoco'
+
+ext {
+    jacocoLineMin = 0.8
+    jacocoBranchMin = 0.8
+    jacocoExcludes = [
+        "**/StartApplication*",
+        "**/exception/**",
+        "**/dto/**",
+        "**/command/**",
+        "**/*Converter**",
+        "**/*Mapper*",
+        "**/*DTO.class",
+        "**/*DO.class"
+    ]
+}
+
+jacocoTestReport {
+    afterEvaluate {
+        classDirectories.from = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludes)
+        })
+    }
+}
+
+jacocoTestCoverageVerification {
+
+    dependsOn jacocoTestReport
+
+    afterEvaluate {
+        classDirectories.from = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludes)
+        })
+    }
+
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'INSTRUCTION'
+                minimum = jacocoLineMin
+            }
+        }
+
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'BRANCH'
+                minimum = jacocoBranchMin
+            }
+        }
+    }
+}
+
+check {
+    dependsOn jacocoTestReport
+    dependsOn jacocoTestCoverageVerification
+}
